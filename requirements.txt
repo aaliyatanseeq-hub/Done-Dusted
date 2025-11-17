@@ -1,0 +1,7 @@
+# requirements.txt - Minimal working version
+fastapi
+uvicorn[standard]
+python-dotenv
+tweepy
+requests
+pydantic
