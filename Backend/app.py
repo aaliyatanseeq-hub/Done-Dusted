@@ -1,27 +1,30 @@
 """
 ULTRA-STRICT Event Intelligence Platform
-FIXED: Uses OAuth 1.1 for all Twitter actions (comments, retweets, likes)
+FIXED: Serves Frontend + OAuth 1.1 for all Twitter actions
 """
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional
 import uvicorn
 import re
 import time
+import os
 from engines.event_engine import SmartEventEngine
 from engines.attendee_engine import SmartAttendeeEngine
 from services.twitter_client import TwitterClient
-from services.oauth_twitter_client import OAuthTwitterClient
 
+# Initialize FastAPI app
 app = FastAPI(
     title="Event Intelligence Platform",
-    description="FIXED: Uses OAuth 1.1 for all Twitter actions",
+    description="FIXED: Serves Frontend + OAuth 1.1 for all Twitter actions",
     version="2.0.1"
 )
 
+# CORS for production
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,6 +32,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# SERVE FRONTEND - FIXED PATH
+app.mount("/static", StaticFiles(directory="../frontend"), name="static")
+
+@app.get("/")
+async def serve_frontend():
+    """Serve the main frontend page"""
+    return FileResponse('../frontend/index.html')
+
+@app.get("/{full_path:path}")
+async def catch_all(full_path: str):
+    """Catch-all route for frontend routing"""
+    if not full_path.startswith('api/'):
+        return FileResponse('../frontend/index.html')
+    raise HTTPException(status_code=404, detail="API endpoint not found")
 
 # Initialize engines
 event_engine = SmartEventEngine()
@@ -38,7 +56,7 @@ class EventDiscoveryRequest(BaseModel):
     location: str
     start_date: str
     end_date: str
-    categories: List[str]
+    categories: List[str] = []  # Empty since we removed categories
     max_results: int
 
 class AttendeeDiscoveryRequest(BaseModel):
@@ -49,20 +67,6 @@ class AttendeeDiscoveryRequest(BaseModel):
 class TwitterActionRequest(BaseModel):
     attendees: List[dict]
     message: Optional[str] = None
-
-class CommentRequest(BaseModel):
-    posts: List[dict]
-    comment_template: Optional[str] = None
-    hashtags: Optional[str] = None
-
-@app.get("/")
-async def root():
-    return {
-        "message": "🎪 Event Intelligence Platform",
-        "status": "ready", 
-        "version": "2.0.1",
-        "policy": "FIXED - OAuth 1.1 for all Twitter actions"
-    }
 
 @app.get("/api/health")
 async def health_check():
@@ -113,7 +117,7 @@ async def discover_events(request: EventDiscoveryRequest):
             location=request.location,
             start_date=request.start_date,
             end_date=request.end_date,
-            categories=request.categories,
+            categories=request.categories,  # Will be empty array
             max_results=request.max_results
         )
 
@@ -482,43 +486,6 @@ async def post_quote_tweets(request: TwitterActionRequest):
             "error": str(e)
         }
 
-@app.post("/api/test-single-comment")
-async def test_single_comment():
-    """Test endpoint for posting a single comment"""
-    try:
-        from services.twitter_client import TwitterClient
-        
-        twitter_client = TwitterClient()
-        
-        if not twitter_client.api:
-            return {"success": False, "error": "OAuth 1.1 not available"}
-        
-        # Test with a known tweet ID
-        test_tweet_id = "1879999999999999999"  # Replace with actual tweet ID
-        test_username = "testuser"
-        comment_text = f"@{test_username} 👋 Test comment from Event Intelligence Platform! 🎉"
-        
-        print(f"🧪 Testing comment on tweet: {test_tweet_id}")
-        
-        tweet = twitter_client.api.update_status(
-            status=comment_text,
-            in_reply_to_status_id=test_tweet_id,
-            auto_populate_reply_metadata=True
-        )
-        
-        return {
-            "success": True,
-            "message": "Test comment posted successfully",
-            "tweet_id": tweet.id,
-            "original_tweet_id": test_tweet_id
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
 def extract_tweet_id(post_link: str) -> Optional[str]:
     """Extract tweet ID from Twitter post link"""
     try:
@@ -537,9 +504,6 @@ def extract_tweet_id(post_link: str) -> Optional[str]:
         return None
     except Exception:
         return None
-
-# Serve frontend
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
 
 if __name__ == "__main__":
     print("🚀 Event Intelligence Platform Starting...")
