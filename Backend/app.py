@@ -69,7 +69,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# FIXED: SERVE FRONTEND - DYNAMIC PATH DETECTION
+# FIXED: SERVE FRONTEND - PROPER STATIC FILE HANDLING
 project_root = os.path.dirname(backend_dir)
 frontend_dir = os.path.join(project_root, "frontend")
 
@@ -79,7 +79,7 @@ print(f"📁 Frontend directory: {frontend_dir}")
 if os.path.exists(frontend_dir):
     print("✅ Frontend directory found")
    
-    # Mount static files
+    # Mount the entire frontend directory as static files
     app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
    
     @app.get("/")
@@ -106,8 +106,7 @@ else:
             "message": "🎪 Event Intelligence Platform API",
             "status": "running",
             "version": "2.0.1",
-            "frontend": "not_found",
-            "frontend_path": frontend_dir
+            "frontend": "not_found"
         }
 
 # Initialize engines
