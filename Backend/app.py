@@ -69,20 +69,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# SERVE FRONTEND - FIXED PATH
-app.mount("/static", StaticFiles(directory="../frontend"), name="static")
+# FIXED: SERVE FRONTEND - DYNAMIC PATH DETECTION
+project_root = os.path.dirname(backend_dir)
+frontend_dir = os.path.join(project_root, "frontend")
 
-@app.get("/")
-async def serve_frontend():
-    """Serve the main frontend page"""
-    return FileResponse('../frontend/index.html')
+print(f"📁 Project root: {project_root}")
+print(f"📁 Frontend directory: {frontend_dir}")
 
-@app.get("/{full_path:path}")
-async def catch_all(full_path: str):
-    """Catch-all route for frontend routing"""
-    if not full_path.startswith('api/'):
-        return FileResponse('../frontend/index.html')
-    raise HTTPException(status_code=404, detail="API endpoint not found")
+if os.path.exists(frontend_dir):
+    print("✅ Frontend directory found")
+   
+    # Mount static files
+    app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+   
+    @app.get("/")
+    async def serve_frontend():
+        index_path = os.path.join(frontend_dir, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        else:
+            return {"message": "Frontend index.html not found", "directory": frontend_dir}
+   
+    @app.get("/{full_path:path}")
+    async def catch_all(full_path: str):
+        if not full_path.startswith('api/'):
+            index_path = os.path.join(frontend_dir, "index.html")
+            if os.path.exists(index_path):
+                return FileResponse(index_path)
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+else:
+    print("⚠️ Frontend directory not found - serving API only")
+   
+    @app.get("/")
+    async def root():
+        return {
+            "message": "🎪 Event Intelligence Platform API",
+            "status": "running",
+            "version": "2.0.1",
+            "frontend": "not_found",
+            "frontend_path": frontend_dir
+        }
 
 # Initialize engines
 event_engine = SmartEventEngine()
