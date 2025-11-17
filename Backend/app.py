@@ -567,9 +567,7 @@ def extract_tweet_id(post_link: str) -> Optional[str]:
         return None
 
 if __name__ == "__main__":
-    print("🚀 Event Intelligence Platform Starting...")
-    print("📡 API: http://localhost:8000")
-    print("🎯 POLICY: FIXED - OAuth 1.1 for all Twitter actions")
-    print("🐦 TWITTER ACTIONS: Retweet, Like, Comment, Quote Tweet")
-    print("💡 Test auth status: http://localhost:8000/api/auth-status")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
