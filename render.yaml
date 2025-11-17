@@ -4,9 +4,9 @@ services:
     env: python
     rootDir: Backend
     plan: free
+    pythonVersion: 3.12.0
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    pythonVersion: 3.12.0
     envVars:
       - key: TWITTER_BEARER_TOKEN
         sync: false
