@@ -8,7 +8,7 @@ services:
     startCommand: cd backend && uvicorn app:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.0
+        value: 3.12.0
       - key: TWITTER_BEARER_TOKEN
         value: your_twitter_bearer_token_here
       - key: TWITTER_API_KEY
