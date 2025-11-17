@@ -1,21 +1,20 @@
-# render.yaml
 services:
   - type: web
-    name: event-intelligence-platform
+    name: event-intelligence-backend
     env: python
+    rootDir: Backend
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: cd backend && uvicorn app:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    pythonVersion: 3.12.0
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
       - key: TWITTER_BEARER_TOKEN
-        value: your_twitter_bearer_token_here
+        sync: false
       - key: TWITTER_API_KEY
-        value: your_twitter_api_key_here
+        sync: false
       - key: TWITTER_API_SECRET
-        value: your_twitter_api_secret_here
+        sync: false
       - key: TWITTER_ACCESS_TOKEN
-        value: your_twitter_access_token_here
+        sync: false
       - key: TWITTER_ACCESS_TOKEN_SECRET
-        value: your_twitter_access_token_secret_here
+        sync: false
