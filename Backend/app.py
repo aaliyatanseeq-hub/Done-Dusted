@@ -70,7 +70,7 @@ async def health_check():
     return {
         "status": "healthy",
         "twitter_search_ready": twitter_client.is_operational(),
-        "twitter_actions_ready": twitter_client.api is not None,
+        "twitter_actions_ready": twitter_client.api_v1 is not None,
         "features": ["event_discovery", "attendee_discovery", "twitter_actions"]
     }
 
@@ -84,9 +84,9 @@ async def auth_status():
     # Test OAuth 1.1
     oauth1_working = False
     oauth1_user = None
-    if twitter_client.api:
+    if twitter_client.api_v1:
         try:
-            user = twitter_client.api.verify_credentials()
+            user = twitter_client.api_v1.verify_credentials()
             oauth1_working = True
             oauth1_user = user.screen_name
         except Exception as e:
@@ -401,7 +401,7 @@ async def post_quote_tweets(request: TwitterActionRequest):
         
         twitter_client = TwitterClient()
         
-        if not twitter_client.api:
+        if not twitter_client.api_v1:
             return {
                 "success": False,
                 "error": "Twitter OAuth 1.1 not configured for quote tweets"
@@ -442,7 +442,7 @@ async def post_quote_tweets(request: TwitterActionRequest):
                 print(f"   🔁 Creating quote tweet for {username}'s tweet: {tweet_id}")
                 
                 # For OAuth 1.1, we use retweet with comment (quote tweet)
-                tweet = twitter_client.api.update_status(
+                tweet = twitter_client.api_v1.update_status(
                     status=quote_text
                 )
                 
@@ -490,7 +490,7 @@ async def test_single_comment():
         
         twitter_client = TwitterClient()
         
-        if not twitter_client.api:
+        if not twitter_client.api_v1:
             return {"success": False, "error": "OAuth 1.1 not available"}
         
         # Test with a known tweet ID
@@ -500,7 +500,7 @@ async def test_single_comment():
         
         print(f"🧪 Testing comment on tweet: {test_tweet_id}")
         
-        tweet = twitter_client.api.update_status(
+        tweet = twitter_client.api_v1.update_status(
             status=comment_text,
             in_reply_to_status_id=test_tweet_id,
             auto_populate_reply_metadata=True
