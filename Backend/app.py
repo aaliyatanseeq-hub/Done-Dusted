@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, OptionalFF
 import uvicorn
 import re
 import time
@@ -91,12 +91,15 @@ if os.path.exists(frontend_dir):
             return {"message": "Frontend index.html not found", "directory": frontend_dir}
    
     @app.get("/{full_path:path}")
-    async def catch_all(full_path: str):
-        if not full_path.startswith('api/'):
-            index_path = os.path.join(frontend_dir, "index.html")
-            if os.path.exists(index_path):
-                return FileResponse(index_path)
-        raise HTTPException(status_code=404, detail="API endpoint not found")
+async def catch_all(full_path: str):
+    # Don't serve HTML for static file or API requests
+    if full_path.startswith('static/') or full_path.startswith('api/'):
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    index_path = os.path.join(frontend_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Frontend not found")
 else:
     print("⚠️ Frontend directory not found - serving API only")
    
